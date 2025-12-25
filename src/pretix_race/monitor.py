@@ -380,11 +380,14 @@ class SecondhandMonitor:
         # Use the redirect URL from cart-add, or fall back to checkout
         checkout_url = redirect_url or self.config.checkout_url
 
-        # Log session cookie prominently (so it's in terminal history)
+        # Log session cookies and fallback script (so it's in terminal history)
         self._log("=" * 50)
-        self._log("SESSION COOKIE (copy this if browser fails!):")
+        self._log("SESSION COOKIES:")
         for name, value in cookies.items():
             self._log(f"  {name}={value}")
+        self._log("")
+        self._log("FALLBACK (paste in Chrome Console if browser fails):")
+        self._log(self._build_cookie_script(cookies))
         self._log("=" * 50)
 
         # Export cookies to timestamped file (never overwritten)
@@ -476,12 +479,22 @@ class SecondhandMonitor:
             self._log(f"Playwright error: {e}")
             return False
 
-    def _print_manual_cookie_instructions(self, cookies: dict[str, str]) -> None:
-        """Print instructions for manual cookie injection.
+    def _build_cookie_script(self, cookies: dict[str, str]) -> str:
+        """Build JavaScript to set cookies via cookieStore API.
 
         Uses the cookieStore API which can set __Host- prefixed cookies
         (unlike document.cookie which cannot).
         """
+        cookie_sets = []
+        for name, value in cookies.items():
+            cookie_sets.append(
+                f'  await cookieStore.set({{name: "{name}", value: "{value}", '
+                f'path: "/", secure: true, sameSite: "lax"}})'
+            )
+        return "(async () => {\n" + ";\n".join(cookie_sets) + ";\n  location.reload();\n})()"
+
+    def _print_manual_cookie_instructions(self, cookies: dict[str, str]) -> None:
+        """Print instructions for manual cookie injection."""
         self._log("\n" + "=" * 50)
         self._log("MANUAL COOKIE INJECTION REQUIRED")
         self._log("=" * 50)
@@ -489,17 +502,7 @@ class SecondhandMonitor:
         self._log("2. Go to Console tab")
         self._log("3. Paste and run this single command:")
         self._log("")
-
-        # Build a single async IIFE that sets all cookies
-        # cookieStore API can set __Host- cookies (document.cookie cannot)
-        cookie_sets = []
-        for name, value in cookies.items():
-            cookie_sets.append(
-                f'  await cookieStore.set({{name: "{name}", value: "{value}", '
-                f'path: "/", secure: true, sameSite: "lax"}})'
-            )
-        script = "(async () => {\n" + ";\n".join(cookie_sets) + ";\n  location.reload();\n})()"
-        self._log(script)
+        self._log(self._build_cookie_script(cookies))
         self._log("")
         self._log("(This uses cookieStore API which works with __Host- cookies)")
 
