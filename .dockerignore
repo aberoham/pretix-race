@@ -1,0 +1,28 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+.venv
+*.egg-info
+
+# IDE
+.idea
+.vscode
+*.swp
+
+# Testing
+.pytest_cache
+.mypy_cache
+.ruff_cache
+
+# Local artifacts
+live-responses/
+sample-responses/
+
+# Documentation (not needed in image)
+*.md
+LICENSE

@@ -1,7 +1,42 @@
 """Configuration for the secondhand monitor."""
 
-from dataclasses import dataclass
+import platform
+from dataclasses import dataclass, field
 from urllib.parse import urlparse
+
+
+def _default_user_agent() -> str:
+    """Generate platform-appropriate user agent."""
+    system = platform.system()
+    if system == "Darwin":
+        return (
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/143.0.0.0 Safari/537.36"
+        )
+    elif system == "Windows":
+        return (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/143.0.0.0 Safari/537.36"
+        )
+    else:  # Linux and others
+        return (
+            "Mozilla/5.0 (X11; Linux x86_64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/143.0.0.0 Safari/537.36"
+        )
+
+
+def _default_sec_ch_ua_platform() -> str:
+    """Generate platform-appropriate Sec-CH-UA-Platform header."""
+    system = platform.system()
+    if system == "Darwin":
+        return '"macOS"'
+    elif system == "Windows":
+        return '"Windows"'
+    else:
+        return '"Linux"'
 
 
 @dataclass(frozen=True)
@@ -25,18 +60,18 @@ class Config:
     save_unusual_responses: bool = True
     response_log_dir: str = "live-responses"
 
-    # Alerting
-    imessage_recipient: str | None = None  # Phone number or email for iMessage alerts
+    # Headless mode for servers without display
+    headless: bool = False
 
-    # Exact Chrome 143 headers (as seen via DevTools)
-    user_agent: str = (
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/143.0.0.0 Safari/537.36"
-    )
+    # Alerting - cross-platform options
+    imessage_recipient: str | None = None  # Phone number or email for iMessage alerts (macOS only)
+    webhook_url: str | None = None  # POST to this URL when tickets found (cross-platform)
+
+    # Platform-appropriate headers (auto-detected by default)
+    user_agent: str = field(default_factory=_default_user_agent)
     sec_ch_ua: str = '"Google Chrome";v="143", "Chromium";v="143", "Not A(Brand";v="24"'
     sec_ch_ua_mobile: str = "?0"
-    sec_ch_ua_platform: str = '"macOS"'
+    sec_ch_ua_platform: str = field(default_factory=_default_sec_ch_ua_platform)
 
     @property
     def secondhand_path(self) -> str:

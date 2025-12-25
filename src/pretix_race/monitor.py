@@ -1,6 +1,7 @@
 """Main monitoring loop for secondhand tickets."""
 
 import hashlib
+import platform
 import random
 import re
 import subprocess
@@ -250,15 +251,23 @@ class SecondhandMonitor:
 
             if success:
                 # Now notify (cart is secured)
-                self._notify_macos("Tickets Found!", "Added to cart - CHECKOUT NOW!")
+                self._notify_desktop("Tickets Found!", "Added to cart - CHECKOUT NOW!")
                 self._send_imessage(
                     f"🎫 TICKET IN CART! Go to checkout NOW! {redirect_url}"
+                )
+                self._send_webhook(
+                    event="ticket_in_cart",
+                    ticket=listing.ticket_type,
+                    price=listing.price,
+                    checkout_url=redirect_url,
+                    cookies=self.session.get_cookies_for_chrome(),
+                    cookie_script=self._build_cookie_script(self.session.get_cookies_for_chrome()),
                 )
                 self._handoff_to_browser(redirect_url)
                 self._running = False
             else:
                 # Failed - notify and retry
-                self._notify_macos("Tickets", "Cart add failed, retrying...")
+                self._notify_desktop("Tickets", "Cart add failed, retrying...")
                 self._log("Failed to add to cart, will retry...")
 
                 # Log other available tickets
@@ -377,24 +386,28 @@ class SecondhandMonitor:
             self._log(f"  Failed to save debug: {e}")
 
     def _handoff_to_browser(self, redirect_url: str | None = None) -> None:
-        """Export session and open browser with cookies injected via Playwright."""
-        self._log("Handing off to browser...")
+        """Export session and optionally open browser.
 
+        In headless mode: just outputs cookies and checkout URL.
+        In interactive mode: opens browser with Playwright.
+        """
         cookies = self.session.get_cookies_for_chrome()
-        # Use the redirect URL from cart-add, or fall back to checkout
         checkout_url = redirect_url or self.config.checkout_url
 
-        # Log session cookies and fallback script (so it's in terminal history)
+        # Always log session cookies and script (terminal history)
         self._log("=" * 50)
         self._log("SESSION COOKIES:")
         for name, value in cookies.items():
             self._log(f"  {name}={value}")
         self._log("")
-        self._log("FALLBACK (paste in Chrome Console if browser fails):")
+        self._log("CHECKOUT URL:")
+        self._log(f"  {checkout_url}")
+        self._log("")
+        self._log("COOKIE INJECTION (paste in Chrome Console):")
         self._log(self._build_cookie_script(cookies))
         self._log("=" * 50)
 
-        # Export cookies to timestamped file (never overwritten)
+        # Export cookies to timestamped file
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         if self._response_dir:
             cookie_file = self._response_dir / f"cookies_{timestamp}.txt"
@@ -404,7 +417,17 @@ class SecondhandMonitor:
         self.session.export_cookies_netscape(cookie_file)
         self._log(f"Cookies saved to: {cookie_file}")
 
-        # Use Playwright to open browser with cookies
+        if self.config.headless:
+            # Headless mode: no browser, just output
+            self._log("")
+            self._log("=" * 50)
+            self._log("HEADLESS MODE - CHECKOUT IN CART")
+            self._log("=" * 50)
+            self._log("Use the cookies above to complete checkout from another machine.")
+            return
+
+        # Interactive mode: open browser with Playwright
+        self._log("Opening browser with Playwright...")
         success = self._handoff_with_playwright(cookies, checkout_url)
 
         if not success:
@@ -417,9 +440,9 @@ class SecondhandMonitor:
 
         Playwright injects cookies BEFORE navigating, so the first
         request already has the correct session.
-        """
-        self._log("Opening browser with Playwright...")
 
+        Only called in interactive (non-headless) mode.
+        """
         try:
             from playwright.sync_api import sync_playwright
         except ImportError:
@@ -435,6 +458,7 @@ class SecondhandMonitor:
                 except Exception:
                     self._log("System Chrome not found, using bundled Chromium")
                     browser = p.chromium.launch(headless=False)
+
                 context = browser.new_context()
 
                 # Inject cookies BEFORE navigating
@@ -510,13 +534,25 @@ class SecondhandMonitor:
         self._log("")
         self._log("(This uses cookieStore API which works with __Host- cookies)")
 
-    def _notify_macos(self, title: str, message: str) -> None:
-        """Send macOS notification."""
-        try:
-            script = f'display notification "{message}" with title "{title}" sound name "Glass"'
-            subprocess.run(["osascript", "-e", script], check=False)
-        except Exception:
-            pass  # Notification is non-critical
+    def _notify_desktop(self, title: str, message: str) -> None:
+        """Send desktop notification (cross-platform)."""
+        if platform.system() == "Darwin":
+            try:
+                script = f'display notification "{message}" with title "{title}" sound name "Glass"'
+                subprocess.run(["osascript", "-e", script], check=False)
+            except Exception:
+                pass
+        elif platform.system() == "Linux":
+            # Try notify-send (requires libnotify)
+            try:
+                subprocess.run(
+                    ["notify-send", "-u", "critical", title, message],
+                    check=False,
+                    capture_output=True,
+                )
+            except Exception:
+                pass  # notify-send not available (headless server)
+        # Windows: could add toast notification, but not a priority
 
     def _send_imessage(self, message: str) -> bool:
         """Send iMessage alert (only once per session).
@@ -563,6 +599,43 @@ class SecondhandMonitor:
             return False
         except Exception as e:
             self._log(f"iMessage error: {e}")
+            return False
+
+    def _send_webhook(self, **kwargs: str | dict[str, str] | None) -> bool:
+        """Send webhook notification (cross-platform).
+
+        Posts JSON payload to configured webhook URL.
+        Includes cookies and cookie_script for completing checkout remotely.
+
+        Returns True if webhook was sent successfully.
+        """
+        if not self.config.webhook_url:
+            return False
+
+        self._log(f"Sending webhook to {self.config.webhook_url}...")
+
+        payload = {
+            "timestamp": datetime.now().isoformat(),
+            "target": self.config.secondhand_url,
+            **{k: v for k, v in kwargs.items() if v is not None},
+        }
+
+        try:
+            import httpx
+
+            response = httpx.post(
+                self.config.webhook_url,
+                json=payload,
+                timeout=10.0,
+            )
+            if response.status_code < 300:
+                self._log("Webhook sent successfully!")
+                return True
+            else:
+                self._log(f"Webhook failed: HTTP {response.status_code}")
+                return False
+        except Exception as e:
+            self._log(f"Webhook error: {e}")
             return False
 
     def _log(self, message: str) -> None:

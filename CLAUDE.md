@@ -5,6 +5,10 @@ Python script for monitoring pretix-based secondhand ticket marketplaces. Races 
 
 Should work with any pretix instance that has the secondhand resale module enabled.
 
+### Modes of Operation
+- **Interactive mode** (default): Opens a browser window for manual checkout completion
+- **Headless mode** (`--headless`): No browser, outputs cookies/checkout URL for remote completion. Use this on Linux servers close to the target for minimal latency.
+
 ## Critical Implementation Details
 
 ### Cookie Handling
@@ -96,11 +100,45 @@ src/pretix_race/
 
 ## Key Commands
 ```bash
-# Run monitor (configure URL in config or via args)
+# Interactive mode (opens browser for checkout)
 uv run pretix-race --url https://tickets.events.example.com --event 99x1 --interval 5 --imessage "+441234567890"
+
+# Headless mode (for Linux servers, no browser)
+uv run pretix-race --url https://tickets.events.example.com --event 99x1 --interval 5 --headless --webhook https://your-server.com/notify
 
 # Test handoff with iMessage
 uv run python -m pretix_race.test_handoff --simulate --imessage "+441234567890"
+```
+
+### Docker (Headless Server)
+```bash
+# Build
+docker build -t pretix-race .
+
+# Run headless on a Linux server
+docker run --rm pretix-race \
+  --url https://tickets.events.example.com \
+  --event 99x1 \
+  --webhook https://your-server.com/notify
+```
+
+### Webhook Payload
+When tickets are found, webhook POSTs JSON:
+```json
+{
+  "timestamp": "2025-01-15T10:30:00.123456",
+  "target": "https://tickets.example.com/event/secondhand/",
+  "event": "ticket_in_cart",
+  "ticket": "Ticket – Type A",
+  "price": "190.00 EUR",
+  "checkout_url": "https://tickets.example.com/event/checkout/start",
+  "cookies": {
+    "__QXSESSION": "...",
+    "__Host-pretix_csrftoken": "...",
+    "__Host-pretix_session": "..."
+  },
+  "cookie_script": "(async () => { await cookieStore.set(...); location.reload(); })()"
+}
 ```
 
 ## Testing
@@ -122,6 +160,7 @@ uv run pytest -k "test_cookies_sent_in_header"
 - `tests/test_parser.py` - HTML parsing tests, fast path regex validation
 - `tests/test_monitor.py` - Monitor tests using sample files from `sample-responses/`
 - `tests/test_cart_add.py` - Cart add, POST behavior, checkout page validation
+- `tests/test_headless.py` - Headless mode, webhook, and platform detection tests
 
 ### Mocking HTTP
 Uses `respx` for mocking `httpx` requests:

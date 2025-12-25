@@ -46,7 +46,7 @@ def main() -> int:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Basic monitoring
+  # Basic monitoring (interactive mode, opens browser)
   pretix-race --url https://tickets.example.com --event myevent
 
   # Monitor with faster polling
@@ -55,8 +55,14 @@ Examples:
   # Filter by item ID and sort by newest
   pretix-race --url https://tickets.example.com --event myevent --item 965 --sort newest
 
-  # Send iMessage when tickets found
+  # Send iMessage when tickets found (macOS only)
   pretix-race --url https://tickets.example.com --event myevent --imessage +1234567890
+
+  # Headless mode for Linux servers (no display needed)
+  pretix-race --url https://tickets.example.com --event myevent --headless
+
+  # Headless with webhook notification
+  pretix-race --url https://tickets.example.com --event myevent --headless --webhook https://your-server.com/notify
 """,
     )
 
@@ -100,10 +106,21 @@ Examples:
         help="Don't add to cart, just notify",
     )
     parser.add_argument(
+        "--headless",
+        action="store_true",
+        help="Run in headless mode (no display, for servers)",
+    )
+    parser.add_argument(
         "--imessage",
         type=str,
         metavar="RECIPIENT",
-        help="Send iMessage alert to this phone/email when tickets found",
+        help="Send iMessage alert to this phone/email when tickets found (macOS only)",
+    )
+    parser.add_argument(
+        "--webhook",
+        type=str,
+        metavar="URL",
+        help="POST JSON notification to this URL when tickets found",
     )
 
     args = parser.parse_args()
@@ -122,7 +139,9 @@ Examples:
         poll_interval_seconds=args.interval,
         item_filter=args.item,
         sort_order=args.sort,
+        headless=args.headless,
         imessage_recipient=args.imessage,
+        webhook_url=args.webhook,
     )
 
     print("=" * 60)
@@ -134,8 +153,11 @@ Examples:
     print(f"  Poll interval: {config.poll_interval_seconds}s")
     print(f"  Item filter: {config.item_filter or 'All tickets'}")
     print(f"  Sort order: {config.sort_order}")
+    print(f"  Mode: {'headless (server)' if config.headless else 'interactive (desktop)'}")
     if config.imessage_recipient:
         print(f"  iMessage alerts: {config.imessage_recipient}")
+    if config.webhook_url:
+        print(f"  Webhook: {config.webhook_url}")
     print()
     print("IMPORTANT: Be respectful of the site.")
     print("Many marketplaces warn: 'Please don't ruin a good thing.'")
