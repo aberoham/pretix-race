@@ -215,7 +215,8 @@ class SecondhandSession:
     def _update_cookies(self, response: httpx.Response) -> None:
         """Update stored cookies from response."""
         for cookie in response.cookies.jar:
-            self.state.cookies[cookie.name] = cookie.value
+            if cookie.value is not None:
+                self.state.cookies[cookie.name] = cookie.value
 
     def update_csrf_token(self, token: str) -> None:
         """Update CSRF token from parsed HTML."""
@@ -254,7 +255,7 @@ class SecondhandSession:
             30 * (2 ** (self.state.consecutive_errors - 1)),
             self.config.backoff_max_seconds,
         )
-        return backoff
+        return float(backoff)
 
     def _reconnect(self, reason: str = "connection limit") -> None:
         """Close and recreate HTTP client for fresh connection.

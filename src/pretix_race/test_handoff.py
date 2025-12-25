@@ -9,18 +9,16 @@ This simulates finding tickets and tests the full handoff flow:
 
 import subprocess
 import sys
-import time
 from datetime import datetime
 from pathlib import Path
 
-from .config import Config, DEFAULT_CONFIG
+from .config import Config
 from .session import SecondhandSession
-from .handoff import export_cookies_netscape, print_manual_instructions
+from .browser_handoff import print_manual_cookie_instructions
 
 
-def test_handoff(open_browser: bool = True) -> None:
+def test_handoff(config: Config, open_browser: bool = True) -> None:
     """Test the cookie handoff flow."""
-    config = DEFAULT_CONFIG
 
     print("=" * 60)
     print("COOKIE HANDOFF TEST")
@@ -32,7 +30,7 @@ def test_handoff(open_browser: bool = True) -> None:
     session = SecondhandSession(config)
 
     try:
-        response = session.get(config.secondhand_url)
+        response, _metrics = session.get(config.secondhand_url)
         print(f"      Status: {response.status_code}")
         print(f"      Cookies received: {list(session.state.cookies.keys())}")
 
@@ -145,7 +143,7 @@ def send_test_imessage(recipient: str) -> bool:
         return False
 
 
-def test_simulated_ticket_found(imessage_recipient: str | None = None) -> None:
+def test_simulated_ticket_found(config: Config, imessage_recipient: str | None = None) -> None:
     """Simulate what happens when a ticket is found.
 
     This tests the full flow including cookie injection via Playwright.
@@ -154,15 +152,13 @@ def test_simulated_ticket_found(imessage_recipient: str | None = None) -> None:
     print("SIMULATED TICKET DETECTION TEST")
     print("=" * 60)
     print()
-
-    config = DEFAULT_CONFIG
     session = SecondhandSession(config)
-    num_steps = 6 if imessage_recipient else 5
+    num_steps = 6  # iMessage step always shown (even when skipped)
 
     try:
         # Establish real session first
         print(f"[1/{num_steps}] Establishing real session...")
-        response = session.get(config.secondhand_url)
+        session.get(config.secondhand_url)
         cookies = session.get_cookies_for_chrome()
         print(f"      Got session: {list(cookies.keys())}")
         for name, value in cookies.items():
@@ -183,13 +179,15 @@ def test_simulated_ticket_found(imessage_recipient: str | None = None) -> None:
         except Exception as e:
             print(f"      Notification failed: {e}")
 
-        # iMessage alert (if recipient provided)
+        # iMessage alert
         step = 4
+        print()
         if imessage_recipient:
-            print()
             print(f"[{step}/{num_steps}] Sending iMessage alert...")
             send_test_imessage(imessage_recipient)
-            step += 1
+        else:
+            print(f"[{step}/{num_steps}] Skipping iMessage alert (no --imessage recipient)")
+        step += 1
 
         # Export cookies (backup)
         print()
@@ -210,8 +208,16 @@ def test_simulated_ticket_found(imessage_recipient: str | None = None) -> None:
         from playwright.sync_api import sync_playwright
 
         with sync_playwright() as p:
-            # Launch visible browser
-            browser = p.chromium.launch(headless=False)
+            # Launch Chrome (not bundled Chromium) if available
+            # Bundled Chromium can crash on macOS ARM (BUS_ADRALN signal)
+            try:
+                browser = p.chromium.launch(
+                    channel="chrome",  # Use installed Chrome
+                    headless=False,
+                )
+            except Exception:
+                print("      Chrome not found, using Chromium...")
+                browser = p.chromium.launch(headless=False)
             context = browser.new_context()
 
             # Inject cookies BEFORE navigating
@@ -237,7 +243,7 @@ def test_simulated_ticket_found(imessage_recipient: str | None = None) -> None:
                         "secure": True,
                         "httpOnly": True,
                     })
-            context.add_cookies(cookie_list)
+            context.add_cookies(cookie_list)  # type: ignore[arg-type]
             print(f"      Injected {len(cookie_list)} cookies")
 
             # Navigate - cookies are already set
@@ -254,6 +260,9 @@ def test_simulated_ticket_found(imessage_recipient: str | None = None) -> None:
             for name, value in cookies.items():
                 print(f"         {name}: {value}")
             print("      " + "-" * 40)
+
+            # Always print manual fallback (in case Playwright cookies don't work)
+            print_manual_cookie_instructions(cookies, test_url)
 
             print()
             print("=" * 60)
@@ -276,6 +285,20 @@ def main() -> int:
 
     parser = argparse.ArgumentParser(description="Test cookie handoff to Chrome")
     parser.add_argument(
+        "--url",
+        type=str,
+        required=True,
+        metavar="URL",
+        help="Base URL of the pretix instance (e.g., https://tickets.example.com)",
+    )
+    parser.add_argument(
+        "--event",
+        type=str,
+        required=True,
+        metavar="SLUG",
+        help="Event slug (e.g., my-event-2025)",
+    )
+    parser.add_argument(
         "--simulate",
         action="store_true",
         help="Simulate full ticket detection flow with notification",
@@ -294,10 +317,12 @@ def main() -> int:
 
     args = parser.parse_args()
 
+    config = Config(base_url=args.url.rstrip("/"), event_slug=args.event)
+
     if args.simulate:
-        test_simulated_ticket_found(imessage_recipient=args.imessage)
+        test_simulated_ticket_found(config, imessage_recipient=args.imessage)
     else:
-        test_handoff(open_browser=not args.no_browser)
+        test_handoff(config, open_browser=not args.no_browser)
 
     return 0
 

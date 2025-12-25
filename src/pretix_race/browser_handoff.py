@@ -5,8 +5,6 @@ the Python requests session into a real Chrome browser.
 """
 
 import subprocess
-import sys
-from pathlib import Path
 
 
 def handoff_with_playwright(
@@ -74,7 +72,7 @@ def handoff_with_playwright(
                     "httpOnly": True,
                 })
 
-        context.add_cookies(cookie_list)
+        context.add_cookies(cookie_list)  # type: ignore[arg-type]
         print(f"Injected {len(cookie_list)} cookies")
 
         # Now navigate - the cookies will be sent with the request

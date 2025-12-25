@@ -187,10 +187,17 @@ def _extract_listings(soup: BeautifulSoup) -> list[TicketListing]:
         if "form-inline" in (form.get("class") or []):
             continue
 
-        buy_button = form.find(
-            ["button", "input"],
+        # Find buy button - check both button and input elements
+        # Note: BeautifulSoup type stubs don't handle name+string combo well
+        buy_button = form.find(  # type: ignore[call-overload]
+            "button",
             string=lambda text: text and "buy" in text.lower() if text else False,
         )
+        if not buy_button:
+            buy_button = form.find(  # type: ignore[call-overload]
+                "input",
+                string=lambda text: text and "buy" in text.lower() if text else False,
+            )
         if not buy_button:
             # Also check for submit buttons
             buy_button = form.find("button", type="submit")

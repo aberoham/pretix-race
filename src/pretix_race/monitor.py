@@ -8,9 +8,13 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import httpx
 
 from .config import Config, DEFAULT_CONFIG
-from .parser import ParseResult, TicketListing, detect_rate_limit, parse_secondhand_page
+from .parser import ParseResult, TicketListing, parse_secondhand_page
 from .session import SecondhandSession, RequestMetrics
 
 # Expected content in "No tickets" page
@@ -310,7 +314,7 @@ class SecondhandMonitor:
             self._log(f"Cart add error: {e}")
             return False, None
 
-    def _save_cart_request(self, url: str, form_data: dict, response: "httpx.Response") -> None:
+    def _save_cart_request(self, url: str, form_data: dict[str, str], response: "httpx.Response") -> None:
         """Save detailed cart request/response for debugging."""
         if not self._response_dir:
             return
@@ -326,7 +330,7 @@ class SecondhandMonitor:
                 "",
                 "REQUEST:",
                 f"  URL: {url}",
-                f"  Method: POST",
+                "  Method: POST",
                 "",
                 "  Cookies sent:",
             ]
@@ -456,7 +460,7 @@ class SecondhandMonitor:
                             "secure": True,
                             "httpOnly": True,
                         })
-                context.add_cookies(cookie_list)
+                context.add_cookies(cookie_list)  # type: ignore[arg-type]
                 self._log(f"Injected {len(cookie_list)} cookies")
 
                 # Navigate - cookies are already set

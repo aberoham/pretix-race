@@ -1,5 +1,5 @@
 ```
-                    _____
+                  __
     ___  _______ / /_(_)_ __      .------------------------.
    / _ \/ __/ -_) __/ /\ \ /     (  |                  (●) )
   / .__/_/  \__/\__/_//_\_\       '------------------------'
@@ -11,7 +11,7 @@
  ██   ██ ██   ██  ██████ ███████      ██████  ██████  ██   ███ ██████  ██    ██    ██  ██████  ██   ███
 ```
 
-# Pretix Secondhand Race Condition
+# Pretix Secondhand: Race Condition
 
 Races a pretix-based secondhand ticket marketplace, automatically adds tickets to cart as soon as available, and hands off to your browser for checkout. Optionally sends iMessage alerts.
 
