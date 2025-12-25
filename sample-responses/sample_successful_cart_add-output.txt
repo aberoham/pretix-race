@@ -1,0 +1,195 @@
+============================================================
+CART ADD REQUEST/RESPONSE DEBUG
+============================================================
+
+REQUEST:
+  URL: https://tickets.example.com/event/secondhand/buy/5g07vpf0krq5sl0e/
+  Method: POST
+
+  Cookies sent:
+    __QXSESSION=2e8ab61c4b40f55ca67a1cf69b533abe
+    __Host-pretix_csrftoken=HjEasQXfHv1gwsdtCYsdxpKEPWzcWI7Z
+    __Host-pretix_session=xw98xf804w177mqnov0g3nlwhrnrzue6
+
+  Form data:
+    csrfmiddlewaretoken=cwrf2tTu6fqmTsAO4qNCjlFe6KYfuBTjJFVx12GzDAhsfKD7we5FGAfIMwnhg7Q1
+
+RESPONSE:
+  Status: 200
+  Final URL: https://tickets.example.com/event/checkout/questions/?
+
+  Response headers:
+    server: openresty
+    date: Thu, 25 Dec 2025 11:31:56 GMT
+    content-type: text/html; charset=utf-8
+    content-length: 78678
+    p3p: CP="ALL DSP COR CUR ADM TAI OUR IND COM NAV INT"
+    content-security-policy: default-src 'self' https://tickets-backend.example.com; script-src 'self' https://tickets-backend.example.com; object-src 'none'; frame-src 'self' https://tickets-backend.example.com; style-src 'self' https://tickets-backend.example.com; connect-src 'self' https://tickets-backend.example.com tickets.example.com; img-src 'self' data: https://tickets-backend.example.com; font-src 'self' https://tickets-backend.example.com; media-src 'self' data: https://tickets-backend.example.com; form-action 'self' https: https://tickets-backend.example.com tickets.example.com
+    vary: Accept-Language, Cookie, Host
+    content-language: en-de
+    x-frame-options: DENY
+    set-cookie: __Host-pretix_csrftoken=HjEasQXfHv1gwsdtCYsdxpKEPWzcWI7Z; expires=Thu, 24 Dec 2026 11:31:56 GMT; Max-Age=31449600; Partitioned; Path=/; SameSite=None; Secure, __Host-pretix_session=xw98xf804w177mqnov0g3nlwhrnrzue6; expires=Thu, 08 Jan 2026 11:31:56 GMT; HttpOnly; Max-Age=1209600; Partitioned; Path=/; SameSite=None; Secure
+
+  Set-Cookie headers:
+    __Host-pretix_csrftoken=HjEasQXfHv1gwsdtCYsdxpKEPWzcWI7Z
+    __Host-pretix_session=xw98xf804w177mqnov0g3nlwhrnrzue6
+
+  Response body (first 5000 chars):
+----------------------------------------
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en-de">
+<head>
+    <title>
+    
+    
+    
+        
+            Step 1 of 3: Your information –
+        
+    
+        
+    
+        
+    
+    Checkout
+ :: Example Event
+</title>
+    <link rel="stylesheet" href="/static/CACHE/css/presale.99a2ffb5c46f.css" type="text/css">
+    
+        <link rel="stylesheet" type="text/css" href="https://tickets.example.com/event/theme.css?version=c534d21b5f04-1766662045-1766662228" />
+    
+
+    
+
+<script src="/static/CACHE/js/presale.936f100b6f3b.js"></script>
+
+    <meta name="referrer" content="origin">
+    
+
+
+<link type="text/css" rel="stylesheet" href="//static/theme-fonts.css">
+
+
+
+
+
+<script src="/static/CACHE/js/stripe.893da64e6e8e.js"></script>
+<link rel="stylesheet" href="/static/CACHE/css/stripe.e211a06e2355.css" type="text/css">
+
+    <script type="text/plain" id="stripe_pubkey">pk_live_C82l7VyaLCByub2IrGfAESTJ</script>
+
+
+    <script type="text/plain" id="stripe_merchantcountry">DE</script>
+
+
+<link rel="stylesheet" href="/static/CACHE/css/output.0ce22b4cbb13.css" type="text/css">
+
+
+
+<script src="/static/CACHE/js/output.7327fe6921e0.js"></script>
+
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    
+    <meta property="og:type" content="website" />
+    
+        <meta property="og:image" content="https://tickets.example.com/media/pub/thumbs/4bcf032840cdf09d0796abe17722ca3d.5000x1200_HdM6bKm.png" />
+    
+    
+    
+
+    
+        <link rel="icon" href="/static/pretixbase/img/favicon.6b25f7f1a363.ico">
+        <link rel="shortcut icon" href="/static/pretixbase/img/favicon.6b25f7f1a363.ico">
+        <link rel="icon" type="image/png" sizes="16x16" href="/static/pretixbase/img/icons/favicon-16x16.ce949675f6e2.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="/static/pretixbase/img/icons/favicon-32x32.877667e39b7c.png">
+        <link rel="icon" type="image/png" sizes="192x192" href="/static/pretixbase/img/icons/android-chrome-192x192.868e8671fb6a.png">
+        <link rel="apple-touch-icon" sizes="180x180" href="/static/pretixbase/img/icons/apple-touch-icon.d9b24dbcc6f3.png">
+    
+    <meta name="theme-color" content="#9673ff">
+</head>
+<body class="nojs" data-locale="en" data-now="1766662316.596079" data-datetimeformat="YYYY-MM-DD HH:mm" data-timeformat="HH:mm" data-dateformat="YYYY-MM-DD" data-datetimelocale="en" data-currency="EUR">
+
+<nav id="skip-to-main" role="navigation" aria-label="Skip link" class="sr-only on-focus-visible">
+  <p><a href="#content">Skip to main content</a></p>
+</nav>
+<header>
+
+
+    
+    <div class="container page-header-links page-header-links-outside">
+        
+            
+                <div class="pull-right header-part flip hidden-print">
+                    
+                        <nav class="locales" aria-label="select language">
+                            <ul>
+                            
+                                <li><a href="/locale/set?locale=en&next=/event/checkout/questions/" class="active" rel="nofollow" lang="en" hreflang="en"
+                                    aria-label="Website in English">English</a></li>
+                            
+                                <li><a href="/locale/set?locale=de-informal&next=/event/checkout/questions/" class="" rel="nofollow" lang="de-informal" hreflang="de-informal"
+                                    aria-label="Website auf Deutsch">Deutsch</a></li>
+                            
+                            </ul>
+                        </nav>
+                    
+                    
+
+
+
+
+                </div>
+            
+        
+        
+        <div class="clearfix"></div>
+    </div>
+
+</header>
+<div class="container main-box">
+    <main id="content">
+    
+    <div class="page-header pager-header-with-logo logo-large">
+        <div class="">
+            
+                <h1 class="sr-only">
+                    Example Event
+                    
+                        <small><time datetime="2025-12-27">Event dates</time></small>
+                    
+                </h1>
+            
+            
+                <a href="https://tickets.example.com/event/"
+                   title="Homepage">
+                    <img src="/media/pub/thumbs/4bcf032840cdf09d0796abe17722ca3d.1170x5000_S07rlOM.png" alt="Example Event" class="event-logo" />
+                </a>
+            
+        </div>
+        
+            
+        
+        <div class="clearfix"></div>
+    </div>
+    
+    
+    
+    
+<aside aria-label="Your cart">
+    <details class="panel panel-default cart sneak-peek-container" open>
+        <summary class="panel-heading">
+            <h2 class="panel-title">
+                <span>
+                    <i class="fa fa-shopping-cart" aria-hidden="true"></i>
+                    <strong>Your cart</strong>
+                </span>
+            
+----------------------------------------

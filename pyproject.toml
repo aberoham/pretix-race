@@ -1,0 +1,39 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pretix-race"
+version = "0.1.0"
+description = "Pretix Secondhand Race Condition - monitor and snag secondhand tickets"
+requires-python = ">=3.11"
+dependencies = [
+    "httpx[http2]>=0.27",
+    "beautifulsoup4>=4.12",
+    "lxml>=5.0",
+    "playwright>=1.57.0",
+]
+
+[project.scripts]
+pretix-race = "pretix_race.__main__:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pretix_race"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+    "respx>=0.22.0",
+]

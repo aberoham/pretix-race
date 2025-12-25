@@ -1,0 +1,384 @@
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en-de">
+<head>
+    <title>
+    
+    Ticket Marketplace :: Example Event
+</title>
+    <link rel="stylesheet" href="/static/CACHE/css/presale.99a2ffb5c46f.css" type="text/css">
+    
+        <link rel="stylesheet" type="text/css" href="https://tickets.example.com/event/theme.css?version=c534d21b5f04-1766655744-1766655627" />
+    
+
+    
+
+<script src="/static/CACHE/js/presale.936f100b6f3b.js"></script>
+
+    <meta name="referrer" content="origin">
+    
+
+
+<link type="text/css" rel="stylesheet" href="//static/theme-fonts.css">
+
+
+
+<link rel="stylesheet" href="/static/CACHE/css/output.0ce22b4cbb13.css" type="text/css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    
+    <meta property="og:type" content="website" />
+    
+        <meta property="og:image" content="https://tickets.example.com/media/pub/thumbs/4bcf032840cdf09d0796abe17722ca3d.5000x1200_HdM6bKm.png" />
+    
+    
+    
+
+    
+        <link rel="icon" href="/static/pretixbase/img/favicon.6b25f7f1a363.ico">
+        <link rel="shortcut icon" href="/static/pretixbase/img/favicon.6b25f7f1a363.ico">
+        <link rel="icon" type="image/png" sizes="16x16" href="/static/pretixbase/img/icons/favicon-16x16.ce949675f6e2.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="/static/pretixbase/img/icons/favicon-32x32.877667e39b7c.png">
+        <link rel="icon" type="image/png" sizes="192x192" href="/static/pretixbase/img/icons/android-chrome-192x192.868e8671fb6a.png">
+        <link rel="apple-touch-icon" sizes="180x180" href="/static/pretixbase/img/icons/apple-touch-icon.d9b24dbcc6f3.png">
+    
+    <meta name="theme-color" content="#9673ff">
+</head>
+<body class="nojs" data-locale="en" data-now="1766655912.829292" data-datetimeformat="YYYY-MM-DD HH:mm" data-timeformat="HH:mm" data-dateformat="YYYY-MM-DD" data-datetimelocale="en" data-currency="EUR">
+
+<nav id="skip-to-main" role="navigation" aria-label="Skip link" class="sr-only on-focus-visible">
+  <p><a href="#content">Skip to main content</a></p>
+</nav>
+<header>
+
+
+    
+    <div class="container page-header-links page-header-links-outside">
+        
+            
+                <div class="pull-right header-part flip hidden-print">
+                    
+                        <nav class="locales" aria-label="select language">
+                            <ul>
+                            
+                                <li><a href="/locale/set?locale=en&next=/event/secondhand/%3Fsort=price_asc" class="active" rel="nofollow" lang="en" hreflang="en"
+                                    aria-label="Website in English">English</a></li>
+                            
+                                <li><a href="/locale/set?locale=de-informal&next=/event/secondhand/%3Fsort=price_asc" class="" rel="nofollow" lang="de-informal" hreflang="de-informal"
+                                    aria-label="Website auf Deutsch">Deutsch</a></li>
+                            
+                            </ul>
+                        </nav>
+                    
+                    
+
+
+
+
+                </div>
+            
+        
+        
+        <div class="clearfix"></div>
+    </div>
+
+</header>
+<div class="container main-box">
+    <main id="content">
+    
+    <div class="page-header pager-header-with-logo logo-large">
+        <div class="">
+            
+                <h1 class="sr-only">
+                    Example Event
+                    
+                        <small><time datetime="2025-12-27">Event dates</time></small>
+                    
+                </h1>
+            
+            
+                <a href="https://tickets.example.com/event/"
+                   title="Homepage">
+                    <img src="/media/pub/thumbs/4bcf032840cdf09d0796abe17722ca3d.1170x5000_S07rlOM.png" alt="Example Event" class="event-logo" />
+                </a>
+            
+        </div>
+        
+            
+        
+        <div class="clearfix"></div>
+    </div>
+    
+    
+    
+    
+    <h2>Ticket Marketplace</h2>
+
+    <div class="panel panel-info">
+        <div class="panel-heading">
+            <h3 class="panel-title">How it works</h3>
+        </div>
+        <div class="panel-body">
+            <p>Welcome to the ticket marketplace! Here you can purchase tickets from other attendees who can no longer attend the event.</p>
+
+            <ol>
+                <li>Click "Buy" to reserve the ticket and proceed to checkout.</li>
+                <li>Complete your payment immediately to finalize the purchase.<br>&nbsp;</li>
+                <div class="alert alert-danger">
+                    <strong>Important: Very short payment window!</strong>
+                    <p style="margin-bottom: 0;">
+                        You must complete payment within <strong>30 minutes</strong> after completing the order. Payment is only possible by credit card.
+                    </p>
+                </div>
+            </ol>
+            <ol>
+                <li value="3">You'll receive your ticket confirmation by email.</li>
+                <li>We will deactivate the marketplace if we observe irresponsible scraping and botting. Please don’t ruin a good thing.</li>
+            </ol>
+            <p class="text-muted">
+                <span class="fa fa-info-circle"></span>
+                You have a ticket and want to sell it? Click the link to your order details in your order confirmation email and follow the process there.
+            </p>
+        </div>
+    </div>
+
+    <form class="form-inline text-right" method="get">
+        <div class="form-group">
+            <select name="item" class="form-control" id="id_item">
+  <option value="" selected>All tickets</option>
+
+  <option value="965">Ticket</option>
+
+  <option value="966">Up-and-coming Ticket</option>
+
+</select>
+        </div>
+        &nbsp;
+        <div class="form-group">
+            <select name="sort" class="form-control" id="id_sort">
+  <option value="price_asc" selected>Price (Low to High)</option>
+
+  <option value="price_desc">Price (High to Low)</option>
+
+  <option value="newest">Newest First</option>
+
+  <option value="oldest">Oldest First</option>
+
+</select>
+        </div>
+        &nbsp;
+
+        <button type="submit" class="btn btn-primary">Apply</button>
+    </form>
+
+    <hr>
+
+    
+        <div class="row">
+            
+                <div class="col-md-4 col-sm-6">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Ticket – Type A</h3>
+                        </div>
+                        <div class="panel-body">
+                            <div class="text-center">
+                                <h2 class="text-primary">190.00 EUR</h2>
+                                <p class="text-muted">
+                                    <small>Listed: 2025-12-25</small>
+                                </p>
+                            </div>
+                            <form method="post"
+                                  action="https://tickets.example.com/event/secondhand/buy/z1iruozsop1d5nsi/">
+                                <input type="hidden" name="csrfmiddlewaretoken" value="ZATFYvjiucK4Cd8WN2Ir3o7tIWvKR6KbLdlazWDMd5eE7OcbLwxFTaB9aU613RF5">
+                                <button type="submit" class="btn btn-success btn-block">
+                                    Buy
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            
+        </div>
+
+        
+
+
+
+    
+
+
+
+    </main>
+    <footer>
+        
+    
+    
+
+        <nav aria-label="Footer Navigation">
+            <ul>
+            
+    
+        <li><a href="mailto:tickets@example.com" target="_blank" rel="noopener">Contact</a></li>
+    
+    
+        <li><a href="/redirect/?url=https%3A//legal.example.com/%3A6KVO5-w_pfRqYXzOa273SeUuJvqKBQB_v7Au1prBozc" target="_blank" rel="noopener">Privacy policy</a></li>
+    
+    
+    
+    
+        <li><a href="/redirect/?url=https%3A//legal.example.com/%3A6KVO5-w_pfRqYXzOa273SeUuJvqKBQB_v7Au1prBozc" target="_blank" rel="noopener">Imprint</a></li>
+    
+
+            
+            
+                <li><a href="/redirect/?url=https%3A//example.com/%3AvKFPSAxFw21hu19xj3BYsLIFCRQlH0PtfyqfiGV1Ffg" target="_blank" rel="noopener">Event Blog</a></li>
+            
+            <li><a href="/redirect/?url=https%3A//example.com/%3AZOayw7Unfsmx31cXwnrWNoa6dz1eg3mIWrOEiJStSOk" target="_blank" rel="noopener">powered by Example Org</a> <a href="/redirect/?url=https%3A//pretix.eu%3AR-d7orqhk8mN6tQtkmPsO5J0UdanqtRg7_Kh-b0jdPI" target="_blank" rel="noopener">based on pretix</a></li> 
+ 
+            </ul>
+        </nav>
+    </footer>
+</div>
+
+
+
+
+
+
+<div id="ajaxerr" class="modal-wrapper" hidden>
+</div>
+<div id="popupmodal" class="modal-wrapper" hidden aria-live="polite" role="dialog"
+        aria-labelledby="popupmodal-title">
+    <div class="modal-card">
+        <div class="modal-card-icon">
+            <i class="fa fa-window-restore big-icon" aria-hidden="true"></i>
+        </div>
+        <div class="modal-card-content">
+            <div>
+                <h2 id="popupmodal-title" class="h3">
+                    We've started the requested process in a new window.
+                </h2>
+                <p class="text">
+                    If you do not see the new window, we can help you launch it again.
+                </p>
+                <p>
+                    <a href="" data-open-in-popup-window class="btn btn-default">
+                        <span class="fa fa-external-link-square"></span>
+                        Open window again
+                    </a>
+                </p>
+                <p class="text">
+                    Once the process in the new window has been completed, you can continue here.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    <dialog 
+        id="loadingmodal" class="modal-card"
+        aria-labelledby="loadingmodal-title"
+        aria-describedby="loadingmodal-description">
+        <form method="dialog" class="modal-card-inner form-horizontal">
+            <div class="modal-card-icon"><span class="fa fa-cog rotating" aria-hidden="true"></span></div>
+            <div class="modal-card-content">
+                <h2 id="loadingmodal-title" class="modal-card-title h3"></h2>
+                <p id="loadingmodal-description" class="modal-card-description"></p>
+                
+    <p class="status">If this takes longer than a few minutes, please contact us.</p>
+    <div class="progress">
+        <div class="progress-bar progress-bar-success">
+        </div>
+    </div>
+    <div class="steps">
+    </div>
+
+            </div>
+        </form>
+    </dialog>
+    
+
+
+    <dialog role="alertdialog"
+        id="dialog-cart-extend" class="modal-card"
+        aria-labelledby="dialog-cart-extend-title"
+        aria-describedby="dialog-cart-extend-description">
+        <form method="dialog" class="modal-card-inner form-horizontal">
+            <div class="modal-card-icon"><span class="fa fa-clock-o" aria-hidden="true"></span></div>
+            <div class="modal-card-content">
+                <h2 id="dialog-cart-extend-title" class="modal-card-title h3"></h2>
+                <p id="dialog-cart-extend-description" class="modal-card-description"></p>
+                
+    <p class="modal-card-confirm"><button class="btn btn-lg btn-primary">Renew reservation</button></p>
+
+            </div>
+        </form>
+    </dialog>
+    
+
+
+    <dialog role="alertdialog"
+        id="dialog-cart-extended" class="modal-card"
+        aria-labelledby="dialog-cart-extended-title"
+        aria-describedby="dialog-cart-extended-description">
+        <form method="dialog" class="modal-card-inner form-horizontal">
+            <div class="modal-card-icon"><span class="fa fa-clock-o" aria-hidden="true"></span></div>
+            <div class="modal-card-content">
+                <h2 id="dialog-cart-extended-title" class="modal-card-title h3"></h2>
+                <p id="dialog-cart-extended-description" class="modal-card-description"></p>
+                
+    <p class="modal-card-confirm"><button class="btn btn-lg btn-primary">OK</button></p>
+
+            </div>
+        </form>
+    </dialog>
+    
+
+<dialog id="lightbox-dialog" class="modal-card" role="alertdialog" aria-labelledby="lightbox-label">
+    <form method="dialog" class="modal-card-inner form-horizontal">
+        <div class="modal-card-content">
+            <figure class="text-center text-muted">
+                <img />
+                <figcaption id="lightbox-label"></figcaption>
+            </figure>
+            <button id="lightbox-close" class="btn btn-default btn-xs" aria-label="Close"><span class="fa fa-close " aria-hidden="true"></span></button>
+        </div>
+    </form>
+</dialog>
+
+
+
+
+
+
+    <dialog 
+        id="dialog-nothing-to-add" class="modal-card"
+        aria-labelledby="dialog-nothing-to-add-title"
+        aria-describedby="dialog-nothing-to-add-description">
+        <form method="dialog" class="modal-card-inner form-horizontal">
+            <div class="modal-card-icon"><span class="fa fa-exclamation-circle" aria-hidden="true"></span></div>
+            <div class="modal-card-content">
+                <h2 id="dialog-nothing-to-add-title" class="modal-card-title h3">You didn't select any ticket.</h2>
+                <p id="dialog-nothing-to-add-description" class="modal-card-description">Please tick a checkbox or enter a quantity for one of the ticket types to add to the cart.</p>
+                
+    <p class="modal-card-confirm"><button class="btn btn-primary">OK</button></p>
+
+            </div>
+        </form>
+    </dialog>
+    
+
+
+    <script src="/static/jsi18n/en/djangojs.0e2e62796561.js"></script>
+
+
+
+</body>
+</html>

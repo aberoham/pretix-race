@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en-de">
+<head>
+    <title>
+        Step 1 of 3: Your information –
+    Checkout
+ :: Example Event
+</title>
+</head>
+<body class="nojs" data-locale="en" data-now="1766678412.590147" data-currency="EUR">
+<div class="container main-box">
+    <main id="content">
+
+    <div class="page-header pager-header-with-logo logo-large">
+        <div class="">
+            <h1 class="sr-only">
+                Example Event
+            </h1>
+        </div>
+    </div>
+
+<aside aria-label="Your cart">
+    <details class="panel panel-default cart sneak-peek-container" open>
+        <summary class="panel-heading">
+            <h2 class="panel-title">
+                <span>
+                    <i class="fa fa-shopping-cart" aria-hidden="true"></i>
+                    <strong>Your cart</strong>
+                </span>
+                <span aria-hidden="true">
+                    <strong id="cart-deadline-short" data-expires="2025-12-25 17:10:12+0100">
+                        09:59
+                    </strong>
+                </span>
+            </h2>
+        </summary>
+
+        <div>
+            <div class="panel-body sneak-peek-content" id="cart-foldable-container">
+                <div role="table" aria-label="Your cart" aria-describedby="cart-deadline" aria-rowcount="3">
+                    <div role="rowgroup" class="firstchild-in-panel">
+                        <div role="row" class="row cart-row" data-article-id="item-965-756">
+                            <div role="cell" class="product">
+                                <p>
+                                <strong>Ticket</strong>
+                                    – Standard
+                                </p>
+                            </div>
+                            <div role="cell" class="count">
+                                1
+                            </div>
+                            <div role="cell" class="singleprice price">
+                                190,00 €
+                            </div>
+                            <div role="cell" class="totalprice price">
+                                <strong>190,00 €</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <div role="rowgroup" class="cart-rowgroup-total">
+                        <div role="row" class="row cart-row total">
+                            <div role="cell" class="product">
+                                <strong>Total</strong><br>
+                                <span class="text-muted">
+                                    One product
+                                </span>
+                            </div>
+                            <div role="cell" class="totalprice price">
+                                <strong>190,00 €</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <form class="text-muted" id="cart-extend-form" method="post" action="https://tickets.example.com/event/cart/extend">
+                    <input type="hidden" name="csrfmiddlewaretoken" value="RrWpEgfvtDoivZnHkzgnIohsmFc2aTBmB2XzH86tNFe0tJpD941bSYhRAw8r3C6f">
+                    <p id="cart-deadline" data-expires="2025-12-25 17:10:12+0100">
+                        The items in your cart are reserved for you for 9 minutes.
+                    </p>
+                </form>
+            </div>
+        </div>
+    </details>
+</aside>
+
+    <h2>Checkout</h2>
+
+<nav aria-label="Checkout steps">
+<ol class="checkout-flow">
+    <li class="checkout-step step-current">
+        <div class="checkout-step-icon">
+            <span class="fa fa-pencil" aria-hidden="true"></span>
+        </div>
+        <div class="checkout-step-label">
+            <span class="sr-only">Current:</span>
+            Your information
+        </div>
+    </li>
+    <li class="checkout-step">
+        <div class="checkout-step-icon">
+            <span class="fa fa-credit-card" aria-hidden="true"></span>
+        </div>
+        <div class="checkout-step-label">
+            Payment
+        </div>
+    </li>
+    <li class="checkout-step">
+        <div class="checkout-step-icon">
+            <span class="fa fa-eye" aria-hidden="true"></span>
+        </div>
+        <div class="checkout-step-label">
+            Review order
+        </div>
+    </li>
+    <li class="checkout-step">
+        <div class="checkout-step-icon">
+            <span class="fa fa-ticket" aria-hidden="true"></span>
+        </div>
+        <div class="checkout-step-label">
+            Order confirmed
+        </div>
+    </li>
+</ol>
+</nav>
+
+    <p>Before we continue, we need you to answer some questions.</p>
+
+    <form class="form-horizontal" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="csrfmiddlewaretoken" value="RrWpEgfvtDoivZnHkzgnIohsmFc2aTBmB2XzH86tNFe0tJpD941bSYhRAw8r3C6f">
+        <div class="panel-group" id="questions_group">
+            <details class="panel panel-default" open>
+                <summary class="panel-heading">
+                    <h3 class="panel-title">
+                        <strong>Contact information</strong>
+                    </h3>
+                </summary>
+                <div id="contact">
+                    <div class="panel-body">
+                        <div class="form-group required">
+                            <label class="col-md-3 control-label" for="id_email">Email<i class="label-required">required</i></label>
+                            <div class="col-md-9">
+                                <input type="email" name="email" autocomplete="section-contact email" maxlength="320" autofocus="autofocus" class="form-control" required id="id_email">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </details>
+        </div>
+        <div class="row checkout-button-row">
+            <div class="col-md-4">
+                <a class="btn btn-block btn-default" href="https://tickets.example.com/event/">
+                    <span class="fa fa-times" aria-hidden="true"></span>
+                    Cancel
+                </a>
+            </div>
+            <div class="col-md-4 col-md-offset-4">
+                <button class="btn btn-block btn-primary btn-lg" type="submit">
+                    Continue
+                    <span class="fa fa-angle-right" aria-hidden="true"></span>
+                </button>
+            </div>
+        </div>
+    </form>
+
+    </main>
+</div>
+</body>
+</html>
