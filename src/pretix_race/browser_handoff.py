@@ -142,19 +142,31 @@ def handoff_with_applescript(
 
 
 def print_manual_cookie_instructions(cookies: dict[str, str], url: str) -> None:
-    """Print instructions for manual cookie injection."""
+    """Print instructions for manual cookie injection.
+
+    Uses the cookieStore API which can set __Host- prefixed cookies
+    (unlike document.cookie which cannot).
+    """
     print("\n" + "=" * 60)
     print("MANUAL COOKIE INJECTION")
     print("=" * 60)
     print(f"\n1. Open Chrome and go to: {url}")
     print("\n2. Open DevTools: Cmd+Option+I (Mac) or F12 (Windows)")
-    print("\n3. Go to Console tab and paste this:")
+    print("\n3. Go to Console tab and paste this single command:")
     print()
 
+    # Build a single async IIFE that sets all cookies
+    # cookieStore API can set __Host- cookies (document.cookie cannot)
+    cookie_sets = []
     for name, value in cookies.items():
-        print(f'document.cookie = "{name}={value}; path=/; secure";')
+        cookie_sets.append(
+            f'  await cookieStore.set({{name: "{name}", value: "{value}", '
+            f'path: "/", secure: true, sameSite: "lax"}})'
+        )
+    script = "(async () => {\n" + ";\n".join(cookie_sets) + ";\n  location.reload();\n})()"
+    print(script)
 
-    print("\n4. Press Enter, then refresh the page (Cmd+R)")
+    print("\n(This uses cookieStore API which works with __Host- cookies)")
     print("\n" + "=" * 60)
 
 

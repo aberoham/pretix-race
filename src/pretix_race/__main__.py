@@ -7,6 +7,38 @@ from .config import Config
 from .monitor import SecondhandMonitor
 
 
+def check_playwright_ready() -> tuple[bool, str]:
+    """Check if Playwright is installed and has browsers available.
+
+    Returns:
+        Tuple of (is_ready, message)
+    """
+    try:
+        from playwright.sync_api import sync_playwright
+    except ImportError:
+        return False, "Playwright package not installed. Run: uv add playwright"
+
+    # Check if browser executable exists
+    try:
+        with sync_playwright() as p:
+            # Get the executable path - this doesn't launch the browser
+            executable = p.chromium.executable_path
+            if not executable:
+                return False, "Chromium not installed. Run: uv run playwright install chromium"
+            # Check if the file actually exists
+            from pathlib import Path
+
+            if not Path(executable).exists():
+                return False, f"Chromium executable not found at {executable}. Run: uv run playwright install chromium"
+    except Exception as e:
+        error_msg = str(e)
+        if "Executable doesn't exist" in error_msg or "not found" in error_msg.lower():
+            return False, "Chromium not installed. Run: uv run playwright install chromium"
+        return False, f"Playwright error: {e}"
+
+    return True, "Playwright ready"
+
+
 def main() -> int:
     """Main entry point."""
     parser = argparse.ArgumentParser(
@@ -107,6 +139,16 @@ Examples:
     print()
     print("IMPORTANT: Be respectful of the site.")
     print("Many marketplaces warn: 'Please don't ruin a good thing.'")
+    print()
+
+    # Check Playwright is ready for browser handoff
+    playwright_ready, playwright_msg = check_playwright_ready()
+    if playwright_ready:
+        print(f"Browser handoff: {playwright_msg}")
+    else:
+        print(f"WARNING: {playwright_msg}")
+        print("         Browser handoff will fall back to manual cookie injection.")
+        print()
     print()
 
     monitor = SecondhandMonitor(config)

@@ -421,8 +421,13 @@ class SecondhandMonitor:
 
         try:
             with sync_playwright() as p:
-                # Launch Chromium (visible browser)
-                browser = p.chromium.launch(headless=False)
+                # Try system Chrome first (more stable), fall back to bundled Chromium
+                try:
+                    browser = p.chromium.launch(channel="chrome", headless=False)
+                    self._log("Using system Chrome")
+                except Exception:
+                    self._log("System Chrome not found, using bundled Chromium")
+                    browser = p.chromium.launch(headless=False)
                 context = browser.new_context()
 
                 # Inject cookies BEFORE navigating
@@ -472,16 +477,31 @@ class SecondhandMonitor:
             return False
 
     def _print_manual_cookie_instructions(self, cookies: dict[str, str]) -> None:
-        """Print instructions for manual cookie injection."""
+        """Print instructions for manual cookie injection.
+
+        Uses the cookieStore API which can set __Host- prefixed cookies
+        (unlike document.cookie which cannot).
+        """
         self._log("\n" + "=" * 50)
         self._log("MANUAL COOKIE INJECTION REQUIRED")
         self._log("=" * 50)
         self._log("1. In Chrome, open DevTools (Cmd+Option+I)")
         self._log("2. Go to Console tab")
-        self._log("3. Paste and run:")
+        self._log("3. Paste and run this single command:")
+        self._log("")
+
+        # Build a single async IIFE that sets all cookies
+        # cookieStore API can set __Host- cookies (document.cookie cannot)
+        cookie_sets = []
         for name, value in cookies.items():
-            self._log(f'   document.cookie = "{name}={value}; path=/; secure";')
-        self._log("4. Refresh the page (Cmd+R)")
+            cookie_sets.append(
+                f'  await cookieStore.set({{name: "{name}", value: "{value}", '
+                f'path: "/", secure: true, sameSite: "lax"}})'
+            )
+        script = "(async () => {\n" + ";\n".join(cookie_sets) + ";\n  location.reload();\n})()"
+        self._log(script)
+        self._log("")
+        self._log("(This uses cookieStore API which works with __Host- cookies)")
 
     def _notify_macos(self, title: str, message: str) -> None:
         """Send macOS notification."""
