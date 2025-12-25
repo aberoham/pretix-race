@@ -10,9 +10,16 @@ Should work with any pretix instance that has the secondhand resale module enabl
 ### Cookie Handling
 - **Session cookie**: `__QXSESSION` - regular cookie, can be set via JS
 - **`__Host-` prefixed cookies**: `__Host-pretix_csrftoken`, `__Host-pretix_session`
-  - CANNOT be set via JavaScript (browser security)
+  - CANNOT be set via `document.cookie` (browser security restriction)
+  - CAN be set via `cookieStore.set()` API (modern browsers)
   - CANNOT have `domain` attribute in Playwright - use `url` instead
-  - Must be injected via Playwright before navigation
+  - Playwright injects cookies at browser context level (before navigation)
+
+### Playwright Setup
+- **Browser preference**: Tries system Chrome first (`channel="chrome"`), falls back to bundled Chromium
+- **Why**: Bundled Chromium can crash on macOS ARM (BUS_ADRALN signal)
+- **Startup check**: Warns if Playwright/browsers not installed, falls back to manual cookie injection
+- **Install**: `uv run playwright install chromium`
 
 ### Playwright Cookie Injection (CRITICAL)
 ```python
@@ -35,6 +42,18 @@ else:
         "httpOnly": True,
     })
 ```
+
+### Manual Cookie Fallback (Chrome Console)
+If Playwright fails, paste this in Chrome DevTools Console:
+```javascript
+(async () => {
+  await cookieStore.set({name: "__QXSESSION", value: "VALUE", path: "/", secure: true, sameSite: "lax"});
+  await cookieStore.set({name: "__Host-pretix_csrftoken", value: "VALUE", path: "/", secure: true, sameSite: "lax"});
+  await cookieStore.set({name: "__Host-pretix_session", value: "VALUE", path: "/", secure: true, sameSite: "lax"});
+  location.reload();
+})()
+```
+The script logs this fallback command with actual cookie values on every handoff attempt.
 
 ### Cart Add Flow
 1. Parse HTML for form with `method="post"` and "Buy" button
@@ -60,6 +79,8 @@ The parser uses regex for speed with BeautifulSoup fallback:
 - Unusual HTML responses saved to `live-responses/`
 - Cart add requests/responses saved to `live-responses/cart_add_*.txt`
 - Cookies saved to timestamped files: `live-responses/cookies_YYYYMMDD_HHMMSS.txt`
+- Fallback `cookieStore.set()` script always logged (even on Playwright success)
+- "Ticket unavailable" in page title = ticket already taken (race lost, not a bug)
 
 ## File Structure
 ```
@@ -119,12 +140,21 @@ def test_example() -> None:
 ## Known Issues & Fixes
 1. **Playwright error "Cookie should have either url or path"**: Don't mix `url` and `path` for `__Host-` cookies
 2. **Cart shows empty after "success"**: Check redirect URL - if it goes back to `/secondhand/` instead of `/checkout/`, the add failed
+3. **Chromium crash (BUS_ADRALN)**: Bundled Playwright Chromium can crash on macOS ARM. Script now tries system Chrome first.
 
 ## Rate Limiting
 - Server returns 429 for rate limiting
 - Server returns 409 with `Retry-After` header for lock timeout
 - Exponential backoff implemented: 30s, 60s, 120s, 240s, max 300s
 - Jitter: ±20% of poll interval for human-like timing and to avoid thundering herds
+
+## Race Condition Reality
+This script is optimized for speed but cannot overcome physics:
+- **Polling gap**: With a 15s interval, tickets can appear up to 14.9s before detection
+- **Network latency**: Varies by location relative to the pretix server
+- **Server-side race**: If someone else's request arrives at the server first, they win
+- **"Ticket unavailable"**: This response means a genuine race loss, not a bug
+- **Lower intervals help**: But be respectful - the site warns against aggressive scraping
 
 ## Pretix Secondhand Page Structure
 Key HTML elements the parser looks for:
