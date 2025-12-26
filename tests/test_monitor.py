@@ -9,10 +9,9 @@ import pytest
 from pretix_race.config import Config
 from pretix_race.monitor import (
     MARKETPLACE_GONE_MESSAGES,
-    MARKETPLACE_INACTIVE_MARKER,
     NO_TICKETS_MARKER,
 )
-from pretix_race.parser import parse_secondhand_page
+from pretix_race.parser import find_marketplace_link, parse_secondhand_page
 
 
 SAMPLE_DIR = Path(__file__).parent.parent / "sample-responses"
@@ -26,16 +25,31 @@ def test_no_tickets_marker_matches_sample() -> None:
     assert NO_TICKETS_MARKER in html
 
 
-def test_marketplace_inactive_marker_matches_sample() -> None:
-    """Verify MARKETPLACE_INACTIVE_MARKER detects inactive marketplace.
+def test_event_page_without_marketplace_link() -> None:
+    """Verify event page without marketplace is detected correctly.
 
-    When the secondhand marketplace is inactive, the server redirects to the
-    main event page. The title contains 'Ticket marketplace is not currently active'.
+    When marketplace is not available, the main event page won't have
+    a link to the secondhand marketplace.
     """
-    sample_file = SAMPLE_DIR / "sample_marketplace_inactive.html"
+    sample_file = SAMPLE_DIR / "sample_event_page_no_marketplace.html"
     html = sample_file.read_text()
 
-    assert MARKETPLACE_INACTIVE_MARKER in html
+    result = find_marketplace_link(html, "https://tickets.example.com")
+    assert result is None
+
+
+def test_event_page_with_marketplace_link() -> None:
+    """Verify event page with marketplace link is detected.
+
+    When marketplace is available, the main event page has a link to
+    the secondhand marketplace.
+    """
+    sample_file = SAMPLE_DIR / "sample_event_page.html"
+    html = sample_file.read_text()
+
+    result = find_marketplace_link(html, "https://tickets.example.com")
+    assert result is not None
+    assert "secondhand/" in result
 
 
 class TestTicketSamples:
@@ -131,3 +145,23 @@ class TestPollInactiveMarketplace:
         for msg in MARKETPLACE_GONE_MESSAGES:
             assert isinstance(msg, str)
             assert len(msg) > 10
+
+
+class TestEventPageUrl:
+    """Test event page URL configuration."""
+
+    def test_event_page_url_property(self) -> None:
+        """Config.event_page_url should return correct URL."""
+        config = Config(
+            base_url="https://tickets.example.com",
+            event_slug="myevent",
+        )
+        assert config.event_page_url == "https://tickets.example.com/myevent/"
+
+    def test_event_page_url_with_trailing_slash(self) -> None:
+        """Config.event_page_url handles base URL with trailing slash."""
+        config = Config(
+            base_url="https://tickets.example.com",
+            event_slug="event2025",
+        )
+        assert config.event_page_url == "https://tickets.example.com/event2025/"

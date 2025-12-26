@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from pretix_race.parser import _extract_listings_fast, parse_secondhand_page
+from pretix_race.parser import _extract_listings_fast, find_marketplace_link, parse_secondhand_page
 
 
 SAMPLE_DIR = Path(__file__).parent.parent / "sample-responses"
@@ -169,3 +169,58 @@ class TestExtractListingsFast:
         assert len(fast_listings) >= 1
         assert len(full_result.listings) >= 1
         assert fast_listings[0].form_action == full_result.listings[0].form_action
+
+
+class TestFindMarketplaceLink:
+    """Tests for marketplace link detection on event pages."""
+
+    def test_finds_marketplace_link_absolute_url(self) -> None:
+        """Verify find_marketplace_link finds absolute marketplace URLs."""
+        html = (SAMPLE_DIR / "sample_event_page.html").read_text()
+
+        result = find_marketplace_link(html, "https://tickets.example.com")
+
+        assert result is not None
+        assert "secondhand/" in result
+        assert result.startswith("https://")
+
+    def test_returns_none_when_no_marketplace_link(self) -> None:
+        """Verify find_marketplace_link returns None when no link present."""
+        html = (SAMPLE_DIR / "sample_event_page_no_marketplace.html").read_text()
+
+        result = find_marketplace_link(html, "https://tickets.example.com")
+
+        assert result is None
+
+    def test_resolves_relative_url(self) -> None:
+        """Verify find_marketplace_link resolves relative URLs."""
+        html = '<a href="/event/secondhand/">Marketplace</a>'
+
+        result = find_marketplace_link(html, "https://tickets.example.com")
+
+        assert result == "https://tickets.example.com/event/secondhand/"
+
+    def test_handles_absolute_url_without_base(self) -> None:
+        """Verify absolute URLs work even without base_url."""
+        html = '<a href="https://tickets.example.com/event/secondhand/">Marketplace</a>'
+
+        result = find_marketplace_link(html, "")
+
+        assert result == "https://tickets.example.com/event/secondhand/"
+
+    def test_ignores_non_secondhand_links(self) -> None:
+        """Verify other links are not matched."""
+        html = '<a href="/event/merch/">Merch</a><a href="/event/faq/">FAQ</a>'
+
+        result = find_marketplace_link(html, "https://tickets.example.com")
+
+        assert result is None
+
+    def test_sample_event_page_has_marketplace_link(self) -> None:
+        """Verify sample_event_page.html contains a valid marketplace link."""
+        html = (SAMPLE_DIR / "sample_event_page.html").read_text()
+
+        result = find_marketplace_link(html, "https://tickets.example.com")
+
+        assert result is not None
+        assert result == "https://tickets.example.com/event/secondhand/"

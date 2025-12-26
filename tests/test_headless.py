@@ -3,7 +3,6 @@
 import subprocess
 import sys
 
-import pytest
 
 
 class TestHeadlessConfig:

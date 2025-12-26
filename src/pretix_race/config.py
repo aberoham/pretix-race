@@ -77,13 +77,18 @@ class Config:
     sec_ch_ua_platform: str = field(default_factory=_default_sec_ch_ua_platform)
 
     @property
+    def event_page_url(self) -> str:
+        """Full URL to main event page."""
+        return f"{self.base_url}/{self.event_slug}/"
+
+    @property
     def secondhand_path(self) -> str:
         """Path to secondhand marketplace."""
         return f"/{self.event_slug}/secondhand/"
 
     @property
     def secondhand_url(self) -> str:
-        """Full URL to secondhand marketplace."""
+        """Full URL to secondhand marketplace (fallback, prefer discovered URL)."""
         return f"{self.base_url}{self.secondhand_path}"
 
     @property

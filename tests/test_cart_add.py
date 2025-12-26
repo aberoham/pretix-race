@@ -6,7 +6,6 @@ import httpx
 import pytest
 import respx
 
-from pretix_race.config import Config
 from pretix_race.session import SecondhandSession
 
 

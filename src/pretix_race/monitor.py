@@ -15,14 +15,11 @@ if TYPE_CHECKING:
     import httpx
 
 from .config import Config, DEFAULT_CONFIG
-from .parser import ParseResult, TicketListing, parse_secondhand_page
+from .parser import ParseResult, TicketListing, find_marketplace_link, parse_secondhand_page
 from .session import SecondhandSession, RequestMetrics
 
 # Expected content in "No tickets" page
 NO_TICKETS_MARKER = "No tickets available at the moment"
-
-# Marketplace inactive indicator (appears in page title after redirect)
-MARKETPLACE_INACTIVE_MARKER = "Ticket marketplace is not currently active"
 
 # Messages displayed when marketplace is detected as inactive
 MARKETPLACE_GONE_MESSAGES = [
@@ -60,6 +57,7 @@ class SecondhandMonitor:
         self._baseline_hash: str | None = None
         self._response_dir: Path | None = None
         self._imessage_sent = False  # Only alert once
+        self._marketplace_url: str | None = None  # Discovered from event page
 
     def run(self) -> None:
         """Main monitoring loop."""
@@ -67,7 +65,6 @@ class SecondhandMonitor:
         self._log("Starting secondhand monitor...")
         jitter_pct = int(self.config.jitter_fraction * 100)
         self._log(f"Polling interval: {self.config.poll_interval_seconds}s (±{jitter_pct}% jitter)")
-        self._log(f"Target URL: {self.config.secondhand_url}")
 
         # Setup response logging directory
         if self.config.save_unusual_responses:
@@ -77,18 +74,33 @@ class SecondhandMonitor:
 
         self._log("-" * 95)
 
-        # Initial request to establish session
-        self._log("Establishing session...")
-        try:
-            self._poll_once()
-        except Exception as e:
-            self._log(f"Initial request failed: {e}")
+        # Step 1: Discover marketplace via event page
+        if not self._discover_marketplace():
+            # Marketplace not found on event page
+            if self.config.poll_inactive_interval:
+                # Wait for marketplace link to appear
+                self._log("")
+                self._log("=" * 60)
+                self._log("MARKETPLACE NOT YET AVAILABLE")
+                self._log("=" * 60)
+                message = random.choice(MARKETPLACE_GONE_MESSAGES)
+                self._log(f'"{message}"')
+                self._log("")
+                jitter_pct = int(self.config.jitter_fraction * 100)
+                self._log(f"Waiting for marketplace link to appear (checking every {self.config.poll_inactive_interval}s ±{jitter_pct}%)...")
+                if not self._poll_for_marketplace_link():
+                    self.session.close()
+                    return  # User cancelled or error
+            else:
+                # Exit with helpful message
+                self._log("")
+                self._log("Marketplace link not found on event page.")
+                self._log("TIP: Use --poll-inactive-marketplace N to wait for it to appear.")
+                self.session.close()
+                return
 
-        # Exit early if marketplace was detected as inactive
-        if not self._running:
-            self.session.close()
-            return
-
+        # Step 2: Marketplace discovered, log session info
+        self._log(f"Monitoring marketplace: {self._marketplace_url}")
         session_cookie = self.session.state.cookies.get("__QXSESSION", "N/A")
         self._log(f"Session established: __QXSESSION={session_cookie}")
         self._log("-" * 95)
@@ -125,8 +137,13 @@ class SecondhandMonitor:
         """Perform a single poll of the marketplace."""
         params = self.config.get_poll_params()
 
+        # Use discovered marketplace URL
+        if not self._marketplace_url:
+            self._log("ERROR: No marketplace URL discovered")
+            return None
+
         try:
-            response, metrics = self.session.get(self.config.secondhand_url, params=params)
+            response, metrics = self.session.get(self._marketplace_url, params=params)
 
             # Get session cookie for logging
             session_cookie = self.session.state.cookies.get("__QXSESSION", "N/A")
@@ -139,12 +156,6 @@ class SecondhandMonitor:
                 result_str = f"HTTP {response.status_code}"
                 is_unusual = True
             else:
-                # Check if marketplace is inactive (redirected to main page)
-                if MARKETPLACE_INACTIVE_MARKER in response_text:
-                    self._log_request(req_num, metrics, session_cookie, "MARKETPLACE INACTIVE")
-                    self._handle_marketplace_inactive()
-                    return None
-
                 # Parse the page
                 parse_result = parse_secondhand_page(response_text)
                 if parse_result.tickets_available:
@@ -648,7 +659,7 @@ class SecondhandMonitor:
 
         payload = {
             "timestamp": datetime.now().isoformat(),
-            "target": self.config.secondhand_url,
+            "target": self._marketplace_url or self.config.secondhand_url,
             **{k: v for k, v in kwargs.items() if v is not None},
         }
 
@@ -676,37 +687,39 @@ class SecondhandMonitor:
         print(f"[{timestamp}] {message}")
         sys.stdout.flush()
 
-    def _handle_marketplace_inactive(self) -> None:
-        """Handle detection of inactive marketplace.
+    def _discover_marketplace(self) -> bool:
+        """Navigate to main event page and find marketplace link.
 
-        If poll_inactive_interval is set, polls until marketplace is active.
-        Otherwise, exits gracefully with a hint about the option.
+        Returns True if marketplace found (URL stored in self._marketplace_url),
+        False otherwise.
         """
-        message = random.choice(MARKETPLACE_GONE_MESSAGES)
-        self._log("")
-        self._log("=" * 60)
-        self._log("MARKETPLACE INACTIVE")
-        self._log("=" * 60)
-        self._log(f'"{message}"')
-        self._log("")
+        self._log(f"Checking event page: {self.config.event_page_url}")
+        try:
+            response, metrics = self.session.get(self.config.event_page_url)
 
-        if self.config.poll_inactive_interval is None:
-            # Exit mode: show hint and stop
-            self._log("TIP: Use --poll-inactive-marketplace N to wait for it to come back.")
-            self._log("")
-            self._running = False
-            return
+            if response.status_code != 200:
+                self._log(f"Event page returned HTTP {response.status_code}")
+                return False
 
-        # Polling mode: wait for marketplace to come back
-        jitter_pct = int(self.config.jitter_fraction * 100)
-        self._log(f"Waiting for marketplace to come back (checking every {self.config.poll_inactive_interval}s ±{jitter_pct}%)...")
-        self._poll_until_active()
+            marketplace_url = find_marketplace_link(response.text, self.config.base_url)
 
-    def _poll_until_active(self) -> None:
-        """Poll until marketplace becomes active again.
+            if marketplace_url:
+                self._marketplace_url = marketplace_url
+                self._log(f"Found marketplace: {marketplace_url}")
+                return True
 
-        Uses poll_inactive_interval with jitter. When marketplace is active,
-        logs success and returns so normal monitoring can resume.
+            self._log("Marketplace link not found on event page")
+            return False
+
+        except Exception as e:
+            self._log(f"Failed to fetch event page: {e}")
+            return False
+
+    def _poll_for_marketplace_link(self) -> bool:
+        """Poll event page until marketplace link appears.
+
+        Uses poll_inactive_interval with jitter. Returns True when marketplace
+        is found (URL stored in self._marketplace_url), False if cancelled.
         """
         poll_count = 0
         while self._running:
@@ -719,37 +732,40 @@ class SecondhandMonitor:
 
                 poll_count += 1
 
-                # Check marketplace status
-                params = self.config.get_poll_params()
-                response, metrics = self.session.get(self.config.secondhand_url, params=params)
+                # Check event page for marketplace link
+                response, metrics = self.session.get(self.config.event_page_url)
 
                 if response.status_code != 200:
                     self._log(f"  [{poll_count}] HTTP {response.status_code} - still checking...")
                     continue
 
-                response_text = response.text
+                marketplace_url = find_marketplace_link(response.text, self.config.base_url)
 
-                if MARKETPLACE_INACTIVE_MARKER in response_text:
+                if not marketplace_url:
                     session_cookie = self.session.state.cookies.get("__QXSESSION", "N/A")
-                    self._log(f"  [{poll_count}] Still inactive [session: {session_cookie[:16]}...]")
+                    self._log(f"  [{poll_count}] Not yet available [session: {session_cookie[:16]}...]")
                     continue
 
-                # Marketplace is back!
+                # Marketplace link found!
+                self._marketplace_url = marketplace_url
                 self._log("")
                 self._log("=" * 60)
-                self._log("MARKETPLACE IS BACK ONLINE!")
+                self._log("MARKETPLACE IS NOW AVAILABLE!")
                 self._log("=" * 60)
+                self._log(f"Found: {marketplace_url}")
                 self._log("Resuming normal monitoring...")
                 self._log("")
-                return
+                return True
 
             except KeyboardInterrupt:
                 self._log("\nStopping monitor...")
                 self._running = False
-                return
+                return False
             except Exception as e:
                 self._log(f"  [{poll_count}] Error: {e}")
                 self.session.record_error()
+
+        return False
 
     def stop(self) -> None:
         """Stop the monitor."""

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Sample Event</title>
+</head>
+<body>
+<div class="container main-box">
+    <main id="content">
+        <div class="page-header">
+            <h1>Sample Event 2021</h1>
+            <small>Dec. 01 - 02, 2021</small>
+        </div>
+
+        <div class="alert alert-info">
+            There are no more tickets - we are completely sold out.
+        </div>
+
+        <div class="info-row">
+            <p>Sample Venue, Sample City</p>
+        </div>
+
+        <div class="big-link-row">
+            <a class="btn btn-lg btn-primary" href="https://tickets.example.com/event/secondhand/">Marketplace</a>
+            <a class="btn btn-lg btn-primary" href="https://example.com/faq">FAQ</a>
+            <a class="btn btn-lg btn-primary" href="https://tickets.example.com/event/">Tickets</a>
+            <a class="btn btn-lg btn-primary" href="https://tickets.example.com/event-merch">Merch</a>
+        </div>
+
+        <form method="post" action="https://tickets.example.com/event/cart/add">
+            <input type="hidden" name="csrfmiddlewaretoken" value="abc123token">
+            <h2>Products</h2>
+            <section class="item-category">
+                <h3>Tickets</h3>
+                <article class="row product-row">
+                    <div class="col-md-8">
+                        <h4>Standard Ticket</h4>
+                    </div>
+                    <div class="col-md-2 price">999,00 EUR</div>
+                    <div class="col-md-2 availability-box gone">
+                        <strong>UNAVAILABLE</strong>
+                    </div>
+                </article>
+            </section>
+        </form>
+
+        <aside class="front-page">
+            <h2 class="h3" id="marketplace">Ticket Marketplace</h2>
+            <div class="row">
+                <div class="col-md-8">
+                    <p>Can't attend? Sell your ticket to someone else!</p>
+                </div>
+                <div class="col-md-4">
+                    <a href="https://tickets.example.com/event/secondhand/" class="btn btn-block btn-default">
+                        Browse Tickets
+                    </a>
+                </div>
+            </div>
+        </aside>
+
+        <aside class="front-page">
+            <h2 class="h3">If you have already ordered a ticket</h2>
+            <p>Click on the link in one of the emails we sent you.</p>
+        </aside>
+    </main>
+    <footer>
+        <nav>
+            <ul>
+                <li><a href="mailto:tickets@example.com">Contact</a></li>
+            </ul>
+        </nav>
+    </footer>
+</div>
+</body>
+</html>

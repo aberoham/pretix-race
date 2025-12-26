@@ -7,6 +7,12 @@ from bs4 import BeautifulSoup, Tag
 
 CSRF_PATTERN = re.compile(r'name="csrfmiddlewaretoken" value="([^"]*)"')
 
+# Marketplace link detection - looks for href containing "secondhand/"
+MARKETPLACE_LINK_PATTERN = re.compile(
+    r'<a[^>]*href="([^"]*secondhand/)"[^>]*>',
+    re.IGNORECASE,
+)
+
 # Fast path patterns for ticket detection
 BUY_FORM_PATTERN = re.compile(
     r'<form[^>]*method="post"[^>]*action="([^"]*secondhand/buy/[^"]*)"[^>]*>'
@@ -304,3 +310,43 @@ def detect_rate_limit(html: str, status_code: int) -> tuple[bool, int | None]:
         return True, 30
 
     return False, None
+
+
+def find_marketplace_link(html: str, base_url: str = "") -> str | None:
+    """Find marketplace link on main event page.
+
+    Looks for <a> elements with href containing "secondhand/".
+    Returns absolute URL to marketplace, or None if not found.
+
+    Args:
+        html: Raw HTML content of the event page
+        base_url: Base URL for resolving relative links (e.g., "https://tickets.example.com")
+
+    Returns:
+        Absolute URL to marketplace, or None if not found
+    """
+    # Fast path: regex extraction
+    match = MARKETPLACE_LINK_PATTERN.search(html)
+    if match:
+        href = match.group(1)
+        # Resolve relative URLs
+        if href.startswith("/"):
+            return f"{base_url.rstrip('/')}{href}"
+        # Already absolute
+        if href.startswith("http"):
+            return href
+        # Relative without leading slash (unusual but handle it)
+        return f"{base_url.rstrip('/')}/{href}"
+
+    # Slow path: BeautifulSoup fallback for complex HTML
+    soup = BeautifulSoup(html, "lxml")
+    for link in soup.find_all("a", href=True):
+        href = link.get("href")
+        if isinstance(href, str) and "secondhand/" in href:
+            if href.startswith("/"):
+                return f"{base_url.rstrip('/')}{href}"
+            if href.startswith("http"):
+                return href
+            return f"{base_url.rstrip('/')}/{href}"
+
+    return None

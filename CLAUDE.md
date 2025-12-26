@@ -9,6 +9,20 @@ Should work with any pretix ticketing instance that has the secondhand resale mo
 - **Interactive mode** (default): Opens a browser window for manual checkout completion
 - **Headless mode** (`--headless`): No browser, outputs cookies/checkout URL for remote completion. Use this on Linux servers close to the target for minimal latency.
 
+### Marketplace Discovery Flow
+The monitor navigates naturally rather than hitting the marketplace URL directly:
+
+1. **Visit main event page** (`/{event}/`) - establishes session like a real user
+2. **Find "Marketplace" link** - parses HTML for links containing `secondhand/`
+3. **Follow link to marketplace** - only proceeds if link is found
+4. **Begin ticket polling** - monitors the discovered marketplace URL
+
+If marketplace link is not found:
+- With `--poll-inactive-marketplace N`: Polls event page every N seconds waiting for link to appear
+- Without flag: Exits with message suggesting the flag
+
+This approach avoids looking suspicious by going directly to deep marketplace URLs.
+
 ## Critical Implementation Details
 
 ### Cookie Handling
