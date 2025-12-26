@@ -67,6 +67,9 @@ class Config:
     imessage_recipient: str | None = None  # Phone number or email for iMessage alerts (macOS only)
     webhook_url: str | None = None  # POST to this URL when tickets found (cross-platform)
 
+    # Inactive marketplace polling (None = exit, int = poll interval in seconds)
+    poll_inactive_interval: int | None = None
+
     # Platform-appropriate headers (auto-detected by default)
     user_agent: str = field(default_factory=_default_user_agent)
     sec_ch_ua: str = '"Google Chrome";v="143", "Chromium";v="143", "Not A(Brand";v="24"'

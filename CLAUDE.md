@@ -1,9 +1,9 @@
-# Pretix Secondhand Race Condition
+# pretix secondhand: race condition
 
 ## Project Overview
-Python script for monitoring pretix-based secondhand ticket marketplaces. Races to be first to detect available tickets, adds to cart, and hands off to browser via Playwright for checkout.
+Python bot for monitoring pretix-based secondhand ticket marketplaces. Races to be first to detect available tickets, adds to cart, and hands off to browser via Playwright for checkout.
 
-Should work with any pretix instance that has the secondhand resale module enabled.
+Should work with any pretix ticketing instance that has the secondhand resale module enabled.
 
 ### Modes of Operation
 - **Interactive mode** (default): Opens a browser window for manual checkout completion
@@ -101,10 +101,10 @@ src/pretix_race/
 ## Key Commands
 ```bash
 # Interactive mode (opens browser for checkout)
-uv run pretix-race --url https://tickets.events.example.com --event 99x1 --interval 5 --imessage "+441234567890"
+uv run pretix-race --url https://tickets.events.example.com --event EVENT_SLUG --interval 10 --imessage "+441234567890"
 
 # Headless mode (for Linux servers, no browser)
-uv run pretix-race --url https://tickets.events.example.com --event 99x1 --interval 5 --headless --webhook https://your-server.com/notify
+uv run pretix-race --url https://tickets.events.example.com --event EVENT_SLUG --interval 10 --headless --webhook https://your-server.com/notify
 
 # Test handoff with iMessage
 uv run python -m pretix_race.test_handoff --simulate --imessage "+441234567890"
@@ -126,11 +126,11 @@ docker run --rm pretix-race \
 When tickets are found, webhook POSTs JSON:
 ```json
 {
-  "timestamp": "2025-01-15T10:30:00.123456",
+  "timestamp": "2038-01-19T03:14:07.999999",
   "target": "https://tickets.example.com/event/secondhand/",
   "event": "ticket_in_cart",
   "ticket": "Ticket – Type A",
-  "price": "190.00 EUR",
+  "price": "90.00 EUR",
   "checkout_url": "https://tickets.example.com/event/checkout/start",
   "cookies": {
     "__QXSESSION": "...",
@@ -162,6 +162,20 @@ uv run pytest -k "test_cookies_sent_in_header"
 - `tests/test_cart_add.py` - Cart add, POST behavior, checkout page validation
 - `tests/test_headless.py` - Headless mode, webhook, and platform detection tests
 
+### Test Data: sample-responses/ vs live-responses/
+**IMPORTANT**: Tests must ONLY use files from `sample-responses/`, never `live-responses/`.
+
+- `sample-responses/` - Committed to repo, always available, scrubbed of identifying info
+- `live-responses/` - Gitignored, created at runtime, will be EMPTY on fresh checkout
+
+If you need to add a new test case based on a live response:
+1. Copy the relevant file from `live-responses/` to `sample-responses/`
+2. Scrub any identifying information (event names, URLs, dates, etc.)
+3. Give it a descriptive name like `sample_<scenario>.html`
+4. Reference it in tests via `SAMPLE_DIR / "sample_<scenario>.html"`
+
+Never use `pytest.skip()` as a workaround for missing live data - this masks test gaps.
+
 ### Mocking HTTP
 Uses `respx` for mocking `httpx` requests:
 ```python
@@ -189,13 +203,13 @@ def test_example() -> None:
 
 ## Race Condition Reality
 This script is optimized for speed but cannot overcome physics:
-- **Polling gap**: With a 15s interval, tickets can appear up to 14.9s before detection
+- **Polling gap**: With a 15s interval, tickets can appear up to 14.99s before detection
 - **Network latency**: Varies by location relative to the pretix server
 - **Server-side race**: If someone else's request arrives at the server first, they win
 - **"Ticket unavailable"**: This response means a genuine race loss, not a bug
-- **Lower intervals help**: But be respectful - the site warns against aggressive scraping
+- **Lower intervals help**: But be respectful - most sites warn against aggressive scraping
 
-## Pretix Secondhand Page Structure
+## Pretix secondhand Page Structure
 Key HTML elements the parser looks for:
 - `<div class="panel panel-default">` - ticket listing container
 - `<h3 class="panel-title">` - ticket type (e.g., "Ticket – Standard")

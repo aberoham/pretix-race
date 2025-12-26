@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pretix-race"
-version = "0.1.0"
-description = "Pretix Secondhand Race Condition - monitor and snag secondhand tickets"
+version = "0.2.0"
+description = "pretix secondhand: race condition - bot to monitor and snag secondhand tickets"
 requires-python = ">=3.11"
 dependencies = [
     "httpx[http2]>=0.27",

@@ -11,7 +11,7 @@
  ██   ██ ██   ██  ██████ ███████      ██████  ██████  ██   ███ ██████  ██    ██    ██  ██████  ██   ███
 ```
 
-# Pretix Secondhand: Race Condition
+# pretix secondhand: race condition
 
 Races a pretix-based secondhand ticket marketplace, automatically adds tickets to cart as soon as available, and hands off to your browser for checkout. Optionally sends iMessage alerts.
 
@@ -21,6 +21,7 @@ Races a pretix-based secondhand ticket marketplace, automatically adds tickets t
 - Configurable interval with ±20% jitter for slightly random timing
 - Automatic cart add with browser handoff via Playwright
 - Graceful backoff on rate limits or errors
+- Waits for inactive marketplaces to come back online (`--poll-inactive-marketplace`)
 - Optional iMessage alerts (macOS only)
 
 ## Requirements

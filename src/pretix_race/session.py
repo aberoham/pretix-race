@@ -213,7 +213,19 @@ class SecondhandSession:
         return response
 
     def _update_cookies(self, response: httpx.Response) -> None:
-        """Update stored cookies from response."""
+        """Update stored cookies from response and any redirects.
+
+        When following redirects, cookies may be set in intermediate
+        responses (e.g., 302 redirect sets session cookie). We need to
+        capture cookies from the entire redirect chain.
+        """
+        # First, capture cookies from any redirect responses
+        for redirect_response in response.history:
+            for cookie in redirect_response.cookies.jar:
+                if cookie.value is not None:
+                    self.state.cookies[cookie.name] = cookie.value
+
+        # Then capture cookies from the final response
         for cookie in response.cookies.jar:
             if cookie.value is not None:
                 self.state.cookies[cookie.name] = cookie.value

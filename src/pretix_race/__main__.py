@@ -1,4 +1,4 @@
-"""CLI entry point for Pretix Secondhand Race Condition."""
+"""CLI entry point for pretix secondhand: race condition."""
 
 import argparse
 import sys
@@ -122,6 +122,13 @@ Examples:
         metavar="URL",
         help="POST JSON notification to this URL when tickets found",
     )
+    parser.add_argument(
+        "--poll-inactive-marketplace",
+        type=int,
+        metavar="SECONDS",
+        default=None,
+        help="If marketplace is inactive, poll every N seconds until it comes back (default: exit)",
+    )
 
     args = parser.parse_args()
 
@@ -142,10 +149,11 @@ Examples:
         headless=args.headless,
         imessage_recipient=args.imessage,
         webhook_url=args.webhook,
+        poll_inactive_interval=args.poll_inactive_marketplace,
     )
 
     print("=" * 60)
-    print("Pretix Secondhand Race Condition")
+    print("pretix secondhand: race condition")
     print("=" * 60)
     print()
     print("Configuration:")
@@ -158,6 +166,8 @@ Examples:
         print(f"  iMessage alerts: {config.imessage_recipient}")
     if config.webhook_url:
         print(f"  Webhook: {config.webhook_url}")
+    if config.poll_inactive_interval:
+        print(f"  Inactive marketplace: poll every {config.poll_inactive_interval}s")
     print()
     print("IMPORTANT: Be respectful of the site.")
     print("Many marketplaces warn: 'Please don't ruin a good thing.'")

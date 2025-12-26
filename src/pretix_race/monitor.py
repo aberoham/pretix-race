@@ -21,6 +21,27 @@ from .session import SecondhandSession, RequestMetrics
 # Expected content in "No tickets" page
 NO_TICKETS_MARKER = "No tickets available at the moment"
 
+# Marketplace inactive indicator (appears in page title after redirect)
+MARKETPLACE_INACTIVE_MARKER = "Ticket marketplace is not currently active"
+
+# Messages displayed when marketplace is detected as inactive
+MARKETPLACE_GONE_MESSAGES = [
+    # Dark humor / self-deprecating
+    "And thus, the marketplace has vanished. This is why we can't have nice things.",
+    "The commons have been tragicked. Someone went and ruined it for everyone.",
+    "Congratulations, fellow scrapers. We collectively destroyed it.",
+    "Fun detected. Fun eliminated. Marketplace status: inactive.",
+    "They took their ball and went home. Fair enough, honestly.",
+    "Somewhere, a sysadmin is muttering 'this is why we can't have nice things.'",
+    # Philosophical / reflective
+    "What we obtain too cheap, we esteem too lightly. - Thomas Paine (probably about F5 keys)",
+    "The tragedy of the commons plays out again. Garrett Hardin would be unsurprised.",
+    "In the end, we are all just visitors in the marketplace of life.",
+    "Perhaps the real tickets were the friends we made along the way. (They weren't.)",
+    "Every shared resource contains the seeds of its own destruction.",
+    "The marketplace has closed. Sometimes the only winning move is not to play.",
+]
+
 # Patterns for dynamic content to strip before hashing
 DYNAMIC_PATTERNS = [
     re.compile(r'data-now="[^"]*"'),  # Unix timestamp
@@ -62,6 +83,11 @@ class SecondhandMonitor:
             self._poll_once()
         except Exception as e:
             self._log(f"Initial request failed: {e}")
+
+        # Exit early if marketplace was detected as inactive
+        if not self._running:
+            self.session.close()
+            return
 
         session_cookie = self.session.state.cookies.get("__QXSESSION", "N/A")
         self._log(f"Session established: __QXSESSION={session_cookie}")
@@ -113,6 +139,12 @@ class SecondhandMonitor:
                 result_str = f"HTTP {response.status_code}"
                 is_unusual = True
             else:
+                # Check if marketplace is inactive (redirected to main page)
+                if MARKETPLACE_INACTIVE_MARKER in response_text:
+                    self._log_request(req_num, metrics, session_cookie, "MARKETPLACE INACTIVE")
+                    self._handle_marketplace_inactive()
+                    return None
+
                 # Parse the page
                 parse_result = parse_secondhand_page(response_text)
                 if parse_result.tickets_available:
@@ -643,6 +675,81 @@ class SecondhandMonitor:
         timestamp = datetime.now().strftime("%H:%M:%S.%f")[:-3]
         print(f"[{timestamp}] {message}")
         sys.stdout.flush()
+
+    def _handle_marketplace_inactive(self) -> None:
+        """Handle detection of inactive marketplace.
+
+        If poll_inactive_interval is set, polls until marketplace is active.
+        Otherwise, exits gracefully with a hint about the option.
+        """
+        message = random.choice(MARKETPLACE_GONE_MESSAGES)
+        self._log("")
+        self._log("=" * 60)
+        self._log("MARKETPLACE INACTIVE")
+        self._log("=" * 60)
+        self._log(f'"{message}"')
+        self._log("")
+
+        if self.config.poll_inactive_interval is None:
+            # Exit mode: show hint and stop
+            self._log("TIP: Use --poll-inactive-marketplace N to wait for it to come back.")
+            self._log("")
+            self._running = False
+            return
+
+        # Polling mode: wait for marketplace to come back
+        jitter_pct = int(self.config.jitter_fraction * 100)
+        self._log(f"Waiting for marketplace to come back (checking every {self.config.poll_inactive_interval}s ±{jitter_pct}%)...")
+        self._poll_until_active()
+
+    def _poll_until_active(self) -> None:
+        """Poll until marketplace becomes active again.
+
+        Uses poll_inactive_interval with jitter. When marketplace is active,
+        logs success and returns so normal monitoring can resume.
+        """
+        poll_count = 0
+        while self._running:
+            try:
+                # Wait with jitter (same as normal polling)
+                base_wait = float(self.config.poll_inactive_interval or 120)
+                jitter_range = base_wait * self.config.jitter_fraction
+                wait_time = base_wait + random.uniform(-jitter_range, jitter_range)
+                time.sleep(wait_time)
+
+                poll_count += 1
+
+                # Check marketplace status
+                params = self.config.get_poll_params()
+                response, metrics = self.session.get(self.config.secondhand_url, params=params)
+
+                if response.status_code != 200:
+                    self._log(f"  [{poll_count}] HTTP {response.status_code} - still checking...")
+                    continue
+
+                response_text = response.text
+
+                if MARKETPLACE_INACTIVE_MARKER in response_text:
+                    session_cookie = self.session.state.cookies.get("__QXSESSION", "N/A")
+                    self._log(f"  [{poll_count}] Still inactive [session: {session_cookie[:16]}...]")
+                    continue
+
+                # Marketplace is back!
+                self._log("")
+                self._log("=" * 60)
+                self._log("MARKETPLACE IS BACK ONLINE!")
+                self._log("=" * 60)
+                self._log("Resuming normal monitoring...")
+                self._log("")
+                return
+
+            except KeyboardInterrupt:
+                self._log("\nStopping monitor...")
+                self._running = False
+                return
+            except Exception as e:
+                self._log(f"  [{poll_count}] Error: {e}")
+                self.session.record_error()
 
     def stop(self) -> None:
         """Stop the monitor."""
