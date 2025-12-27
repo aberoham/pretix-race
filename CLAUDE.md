@@ -23,6 +23,21 @@ If marketplace link is not found:
 
 This approach avoids looking suspicious by going directly to deep marketplace URLs.
 
+## Reference Source Code
+
+The `reference/` directory contains upstream source code as git submodules:
+
+- **`reference/pretix-swap`** - The [pretix-swap](https://github.com/rixx/pretix-swap) plugin by rixx. **Note:** This is NOT the secondhand marketplace plugin - it handles peer-to-peer ticket swapping (exchanging event dates) and cancelation requests between existing ticket holders. Kept as reference for understanding pretix plugin architecture and Django patterns.
+
+- **`reference/pretix`** - The upstream [pretix](https://github.com/pretix/pretix) ticketing system. Useful for understanding core session handling, CSRF, checkout flow, and cart mechanics.
+
+**Important:** The actual secondhand ticket marketplace (`/{event}/secondhand/` pages) appears to be a **bespoke/custom plugin** not available in open source. It allows ticket holders to list tickets for resale; buyers purchase directly and sellers are paid after the sale completes. The source code is not publicly available, so we infer behavior from HTML structure and HTTP responses.
+
+To initialize submodules after cloning:
+```bash
+git submodule update --init --recursive
+```
+
 ## Critical Implementation Details
 
 ### Cookie Handling
@@ -110,6 +125,10 @@ src/pretix_race/
 ├── monitor.py       # Main monitoring loop
 ├── test_handoff.py  # Test cookie handoff to browser
 └── browser_handoff.py  # Playwright/AppleScript handoff utilities
+
+reference/               # Git submodules (run: git submodule update --init)
+├── pretix-swap/         # Peer-to-peer swap plugin (NOT the secondhand marketplace)
+└── pretix/              # Upstream pretix ticketing system
 ```
 
 ## Key Commands

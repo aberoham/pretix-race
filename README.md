@@ -60,6 +60,11 @@ uv run pytest
 uv run python -m pretix_race.test_handoff --simulate
 ```
 
+## Notes
+
+Interesting hints on scaling pretix instances, including its global lock [https://docs.pretix.eu/self-hosting/scaling/](https://docs.pretix.eu/self-hosting/scaling/). 
+
 ## License
 
 MIT
+

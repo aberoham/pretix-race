@@ -1,0 +1,6 @@
+[submodule "reference/pretix-swap"]
+	path = reference/pretix-swap
+	url = https://github.com/rixx/pretix-swap.git
+[submodule "reference/pretix"]
+	path = reference/pretix
+	url = https://github.com/pretix/pretix.git
